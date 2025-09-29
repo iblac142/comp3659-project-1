@@ -5,7 +5,51 @@
 
 const char *prompt = "$ ";
 const char *lengthError = "Messege exceeds max length of 256, please re enter command with shorter length\n";
+const char *forkError = "Error occured while forking new proccess\n";
+const char *execvpError = "Error occured while executing program\n";
+const char *waitpidError = "Error occured while waiting for program\n"; 
 const int maxBuffer = 256;
+
+int run_command(struct Command* command){
+    /*
+    Runs given command as new program through fork then exevcp call
+
+    command - command to run contained in Command structure
+
+    Returns:
+        0 if run successful
+        -1 if error while forking
+        -2 if error while calling exevcp (calling program needs to terminate 
+                it is a duplicate proccess)
+        -3 if error while waiting on new program
+    */
+    int pid;
+    int status;
+
+    //fork new proccess
+    pid = fork();
+
+    if (pid == -1) {
+        write(1, forkError, 42);
+        return -1;
+    }
+
+    if (pid == 0) {
+        //in child
+        execvp(command->argv[0], command->argv);
+        write(1, execvpError, 39);
+        return -2;
+    }
+    if (pid != 0) {
+        //in parent
+        pid = waitpid(pid, &status, 0);
+        if (pid == -1) {
+            write(1, waitpidError, 41);
+            return -3;
+        }
+        return 0;
+    }
+}
 
 int main(int argc, char const *argv[]) {
     char buffer[maxBuffer];
@@ -37,7 +81,7 @@ int main(int argc, char const *argv[]) {
         }
         
         //check if input was "exit"
-        exit = strcmp(buffer, "exit\n");
+        exit = strcmp(buffer, "exit\n"); //TO-DO implemnt own string compare
 
         //echo input back
         write(1, buffer, readLength);
