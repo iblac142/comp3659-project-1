@@ -57,10 +57,11 @@ int get_command(struct Command* command) {
 	clears the heap, then tokenizes the command line and
 	
 	fills in supplied command struct with the data
-
-	Returns:
+	
+    Returns:
 		0 if run successful
 		-1 if error due to too many characters
+        -2 if error due to too many arguments
 	*/
 	
 	int readLength;
@@ -94,6 +95,9 @@ int get_command(struct Command* command) {
         }
         if ((buffer[i] == ' ') && newToken == 1) {
             newToken = 0;
+        }
+        if (tokenCount >= MAX_ARGS - 1) {
+            return -2;
         }
     }
 
