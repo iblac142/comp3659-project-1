@@ -1,7 +1,6 @@
 #include "myheap.h"
 
-
-#define HEAP_SIZE 10000     /* adjust as necessary */
+#define HEAP_SIZE 256     /* adjust as necessary */
 
 static char heap[HEAP_SIZE];
 static char *freep = heap;
@@ -9,11 +8,13 @@ static char *freep = heap;
 
 char *alloc(unsigned int size)
 {
-  return 0;     /* TO DO */
+  freep += size;
+  return freep -= size;
 }
 
 
 void free_all()
 {
-  /* TO DO */
+  freep = heap;
+  return;
 }

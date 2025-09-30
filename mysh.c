@@ -1,5 +1,6 @@
 #include "mystring.h"
 #include "jobs.h"
+#include "myheap.h"
 #include <unistd.h>
 #include <string.h>
 
@@ -49,6 +50,57 @@ int run_command(struct Command* command){
         }
         return 0;
     }
+}
+int get_command(struct Command* command) {
+	/* Prompts user, collects command line into a buffer,
+	
+	clears the heap, then tokenizes the command line and
+	
+	fills in supplied command struct with the data
+	
+	*/
+	
+	int readLength;
+    int newToken = 0;
+    int tokenCount = 0;
+	char *buffer = alloc(256);
+	
+	//prompt and read input
+	write(1, prompt, 2);
+	readLength = read(0, buffer, maxBuffer);
+	
+	//check length
+	if (readLength >= maxBuffer) {
+		//display error message
+		write(1, lengthError, 80);
+		//discard rest of input not read by first read
+		char discard;
+		while (read(0, &discard, 1) == 1 && discard != '\n') {
+		}
+        return -1;
+	}
+
+	// when a non-whitespace character is reached after any number
+    // of whitespace characters, place a pointer to that character
+    // into command's argv.
+	for (int i = 0; i < readLength; i += 1) {
+        if ((buffer[i] != ' ') && newToken == 0) {
+            command->argv[tokenCount] = buffer[i];
+            newToken = 1;
+            tokenCount += 1;
+        }
+        if ((buffer[i] == ' ') && newToken == 1) {
+            newToken = 0;
+        }
+    }
+
+    // set argc of the command
+    command->argc = tokenCount;
+
+	//clear buffer
+	free_all();
+
+    return 0;
 }
 
 int main(int argc, char const *argv[]) {

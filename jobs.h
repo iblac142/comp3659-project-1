@@ -1,7 +1,7 @@
 #ifndef JOBS_H
 #define JOBS_H
 
-#define MAX_ARGS 0     /* TO DO */
+#define MAX_ARGS 16  
 
 struct Command
 {
