@@ -57,7 +57,10 @@ int get_command(struct Command* command) {
 	clears the heap, then tokenizes the command line and
 	
 	fills in supplied command struct with the data
-	
+
+	Returns:
+		0 if run successful
+		-1 if error due to too many characters
 	*/
 	
 	int readLength;
