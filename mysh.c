@@ -54,9 +54,9 @@ int run_command(struct Command* command){
 int get_command(struct Command* command) {
 	/* Prompts user, collects command line into a buffer,
 	
-	clears the heap, then tokenizes the command line and
-	
-	fills in supplied command struct with the data
+	then tokenizes the command line and fills in supplied
+    
+    command struct with the data
 	
     Returns:
 		0 if run successful
@@ -64,49 +64,69 @@ int get_command(struct Command* command) {
         -2 if error due to too many arguments
 	*/
 	
-	int readLength;
-    int newToken = 0;
-    int tokenCount = 0;
-	char *buffer = alloc(256);
-	
-	//prompt and read input
-	write(1, prompt, 2);
-	readLength = read(0, buffer, maxBuffer);
-	
-	//check length
-	if (readLength >= maxBuffer) {
-		//display error message
-		write(1, lengthError, 80);
-		//discard rest of input not read by first read
-		char discard;
-		while (read(0, &discard, 1) == 1 && discard != '\n') {
-		}
-        return -1;
-	}
+	char buffer[maxBuffer];
+    int readLength;
 
-	// when a non-whitespace character is reached after any number
+    //prompt and read input
+    write(1, prompt, 2);
+    readLength = read(0, buffer, maxBuffer);
+    
+    //check length
+    while (readLength >= maxBuffer) {
+        //display error message and reprompt
+        write(1, lengthError, 80);
+        write(1, prompt, 2);
+        //discard rest of input not read by first read
+        char discard;
+        while (read(0, &discard, 1) == 1 && discard != '\n') {
+        }
+        //clear buffer
+        for (int i = 0; i < readLength; i++) {
+            buffer[i] = 0;
+        }
+        //return
+        return -1;
+    }
+
+    // clear the heap
+    clear_heap();
+
+    // when a non-whitespace character is reached after any number
     // of whitespace characters, place a pointer to that character
     // into command's argv.
-	for (int i = 0; i < readLength; i += 1) {
-        if ((buffer[i] != ' ') && newToken == 0) {
-            command->argv[tokenCount] = buffer[i];
-            newToken = 1;
-            tokenCount += 1;
+    int i = 0;
+    int newToken = 0;
+    int tokenCount = 0;
+    char tokenizedLine = alloc(512);
+
+	while (buffer[i] != '\n') {
+        if ((buffer[i] != ' ')) {
+            if (newToken == 0) {
+                command->argv[tokenCount] = tokenizedLine;
+                newToken = 1;
+                tokenCount += 1;
+            }
+            tokenizedLine = buffer[i];
+            tokenizedLine += 1;
         }
         if ((buffer[i] == ' ') && newToken == 1) {
             newToken = 0;
+            tokenizedLine = NULL;
+            tokenizedLine += 1;
         }
         if (tokenCount >= MAX_ARGS - 1) {
             return -2;
         }
+        i += 1;
     }
 
     // set argc of the command
     command->argc = tokenCount;
 
-	//clear buffer
-	free_all();
-
+    //clear buffer
+    for (int i = 0; i < readLength; i++) {
+        buffer[i] = 0;
+    }
     return 0;
 }
 
