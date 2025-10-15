@@ -4,6 +4,6 @@ Each function should have a block comment with three components:
   3. Describe the possible return values
 
 Inline comments are to be used when:
-  a. The precise function or purpose of a piece of code is not immediately apparent
-  b. It is helpful in letting a human reader understand the current state of the program
-  c. The coder believes it to be otherwise helpful
+* The precise function or purpose of a piece of code is not immediately apparent
+* It is helpful in letting a human reader understand the current state of the program
+* The coder believes it to be otherwise helpful
