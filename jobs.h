@@ -17,7 +17,36 @@ struct Job
   char *outfile_path;		/* NULL for no output redirection */
   char *infile_path;		/* NULL for no input redirection */
   int background;			/* 0 for foreground, 1 for background */
-}
+};
+
+
+
+/*
+Runs given command as new program through fork then exevcp call
+
+command - command to run contained in Command structure
+
+Returns:
+  0 if run successful
+  -1 if error while forking
+  -2 if error while calling exevcp (calling program needs to terminate 
+      it is a duplicate proccess)
+  -3 if error while waiting on new program
+*/
+int run_command(struct Command* command);
+
+/* Prompts user, collects command line into a buffer,
+	
+then tokenizes the command line and fills in supplied
+    
+command struct with the data
+	
+Returns:
+	0 if run successful
+	-1 if error due to too many characters
+  -2 if error due to too many arguments
+*/
+int get_command(struct Command* command);
 
 
 #endif
