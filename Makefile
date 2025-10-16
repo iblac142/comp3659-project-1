@@ -1,6 +1,12 @@
 mysh: mysh.o mystring.o myheap.o jobs.o
 	gcc mysh.o mystring.o myheap.o jobs.o -o mysh
 
+test: test.o mystring.o myheap.o jobs.o
+	gcc test.o mystring.o myheap.o jobs.o -o test
+
+test.o: test.c
+	gcc -c test.c
+
 mysh.o: mysh.c mystring.h jobs.h
 	gcc -c mysh.c
 
