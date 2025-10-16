@@ -19,7 +19,7 @@ struct Job
   int background;			/* 0 for foreground, 1 for background */
 };
 
-
+int run_job(struct Job* job);
 
 /*
 Runs given command as new program through fork then exevcp call
@@ -33,7 +33,9 @@ Returns:
       it is a duplicate proccess)
   -3 if error while waiting on new program
 */
-int run_command(struct Command* command);
+int run_command(struct Command* command, int infile, int outfile, int wait);
+
+int run_command_no_fork(struct Command* command, int infile, int outfile);
 
 /* Prompts user, collects command line into a buffer,
 	
