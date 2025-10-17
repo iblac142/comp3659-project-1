@@ -19,23 +19,27 @@ struct Job
   int background;			/* 0 for foreground, 1 for background */
 };
 
-int run_job(struct Job* job);
-
 /*
-Runs given command as new program through fork then exevcp call
+Runs given job with support for multi-stage pipelines, I/O redirection, and background jobs
 
-command - command to run contained in Command structure
+job - pointer to Job structure containing job to execute
 
-Returns:
-  0 if run successful
-  -1 if error while forking
-  -2 if error while calling exevcp (calling program needs to terminate 
-      it is a duplicate proccess)
-  -3 if error while waiting on new program
+Return:
+    0 if successful
+
+    -1 through -4 for single-stage pipelines
+    -1 if error while forking (from run_command)
+    -2 if error while waiting for program (from run_command, foreground jobs only)
+    -3 if error opening input file
+    -4 if error opening output file
+
+    -5 through -7 for multi-stage pipelines
+    -5 if error while creating pipes
+    -6 if error while executing pipelines (a fork failed)
+    -7 if error while waiting for children proccesses (only in foreground execution)
+
 */
-int run_command(struct Command* command, int infile, int outfile, int wait);
-
-int run_command_no_fork(struct Command* command, int infile, int outfile);
+int run_job(struct Job* job);
 
 /* Prompts user, collects command line into a buffer,
 	
