@@ -73,7 +73,7 @@ Returns:
 
 int process_job(struct Job* job);
 /* Populates the supplied job structure by reading from the heap.
-First, populates the command structures via rocess_commands,
+First, populates the command structures via process_commands,
 then populates any other relevant fields itself.
 
 job - the job structure to be populated
@@ -109,8 +109,7 @@ Returns:
 
 
 int get_job(struct Job* job);
-/* Prompts user, collects command line into a buffer, the
-	
+/* Prompts user, collects command line into a buffer, then
 tokenizes the command line and fills in supplied job struct
 
 job - the job structure to be populated
