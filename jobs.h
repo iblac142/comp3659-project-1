@@ -19,6 +19,8 @@ struct Job
   int background;			/* 0 for foreground, 1 for background */
 };
 
+
+int run_job(struct Job* job);
 /*
 Runs given job with support for multi-stage pipelines, I/O redirection, and background jobs
 
@@ -39,20 +41,86 @@ Return:
     -7 if error while waiting for children proccesses (only in foreground execution)
 
 */
-int run_job(struct Job* job);
 
-/* Prompts user, collects command line into a buffer,
+int check_for(char n);
+/* Checks if a given symbol is whitespace, null, or a terminal symbol
+
+n - the symbol to be checked
+
+Returns:
+  0 if the symbol is space, tab, or null (' ', '\t', '\0')
+  1 if the symbol is |
+  2 if the symbol is <
+  3 if the symbol is >
+  4 if the symbol is &
+  5 if the symbol is new line ('\n')
+  -1 if the symbol is anything else 
+*/
+
+int process_commands(struct Job* job, char* heapPos);
+/* Populates the commands of the supplied job structure until one of < > & or \n are encountered
+
+job - the job structure to be populated
+
+heapPos - should point to the beginning of the heap, and is 
+left pointing to the first < > & or \n in the heap afterward
+
+Returns:
+  0 if run successful
+  -2 if a command has too many arguments
+  -3 if the pipeline has too many commands in it
+*/
+
+int process_job(struct Job* job);
+/* Populates the supplied job structure by reading from the heap.
+First, populates the command structures via rocess_commands,
+then populates any other relevant fields itself.
+
+job - the job structure to be populated
+
+Returns:
+  0 if run successful
+  -2 if a command has too many arguments 
+  -3 if the pipeline has too many commands in it 
+  -4 if a malformed command is detected
+*/
+
+
+void write_cmd_prefix();
+/* Writes the command path prefix in cmdPath to the heap.
+
+  No arguments
+  No return values
+*/
+
+
+int tokenize_line(char* buffer);
+/* Tokenizes the contents of the supplied buffer onto the heap,
+removing excess whitespace, adding command path prefixes,
+and null terminating each token
+
+buffer - the beginning of the buffer to be tokenized
+
+Returns:
+  0 if run successful
+  -4 if a malformed command is detected
+
+*/
+
+
+int get_job(struct Job* job);
+/* Prompts user, collects command line into a buffer, the
 	
-then tokenizes the command line and fills in supplied
-    
-command struct with the data
+tokenizes the command line and fills in supplied job struct
+
+job - the job structure to be populated
 	
 Returns:
 	0 if run successful
 	-1 if error due to too many characters
   -2 if error due to too many arguments
+  -3 if error due to too many pipeline stages
+  -4 if error due to malformed command 
 */
-int get_command(struct Command* command);
-
 
 #endif

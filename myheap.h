@@ -3,5 +3,6 @@
 
 char *alloc(unsigned int size);
 void free_all();
+char *heap_start();
 
 #endif

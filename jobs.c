@@ -19,6 +19,9 @@ const char *inOpenError = "Error while opening file for input\n";
 const char *outOpenError = "Error while opening file for output\n";
 const char *pipeError = "Error while creating pipes\n";
 
+const char *cmdPath = "/usr/bin/";
+
+
 /*
 Helper function to run a command with optional waiting
 
@@ -54,7 +57,7 @@ static int run_command(struct Command* command, int infile, int outfile, int wai
             dup2(outfile, 1);
             close(outfile);
         }
-        execve(command->argv[0], command->argv, NULL);
+        execve(command->argv[0], command->argv, '\0');
         write(1, execveError, 39);
         _exit(2);
     }
@@ -92,7 +95,7 @@ static void run_command_no_fork(struct Command* command, int infile, int outfile
         dup2(outfile, 1);
         close(outfile);
     }
-    execve(command->argv[0], command->argv, NULL);
+    execve(command->argv[0], command->argv, '\0');
     write(1, execveError, 39);
     _exit(2);
 }
@@ -114,14 +117,14 @@ static int run_single_stage_job(struct Job* job) {
     int out = 0;
     int should_wait = 1;
     
-    if (job->infile_path != NULL) {
+    if (job->infile_path != '\0') {
         in = open(job->infile_path, O_RDONLY);
         if (in == -1) {
             write(1, inOpenError, 35);
             return -3;
         }
     }
-    if (job->outfile_path != NULL) {
+    if (job->outfile_path != '\0') {
         out = open(job->outfile_path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         if (out == -1) {
             write(1, outOpenError, 36);
@@ -196,7 +199,7 @@ static void setup_first_command(struct Job* job, int pipes[][2], int numberOfPip
     int in = 0;
     int out = 0;
     
-    if (job->infile_path != NULL) {
+    if (job->infile_path != '\0') {
         in = open(job->infile_path, O_RDONLY);
         if (in == -1) {
             write(1, inOpenError, 35);
@@ -232,7 +235,7 @@ static void setup_last_command(struct Job* job, int pipes[][2], int numberOfPipe
     int in = 0;
     int out = 0;
     
-    if (job->outfile_path != NULL) {
+    if (job->outfile_path != '\0') {
         out = open(job->outfile_path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         if (out == -1) {
             write(1, outOpenError, 36);
@@ -392,9 +395,168 @@ int run_job(struct Job* job) {
     return 0;
 }
 
-int get_command(struct Command* command) {
+int check_for(char n) {
+    if (n == ' ' || n == '\t' || n == '\0') return 0;
+    if (n == '|') return 1;
+    if (n == '<') return 2;
+    if (n == '>') return 3;
+    if (n == '&') return 4;
+    if (n == '\n') return 5;
+    return -1;
+}
+
+int process_commands(struct Job* job, char* heapPos) {
+    int numArgs = 0;
+    int numCommands = 0;
+    int newToken = 0;
+    // Continue until first < or > or & or end of file
+    while (check_for(*heapPos) < 2) {
+        // Continue until | (i.e. end of command)
+        while (check_for(*heapPos) < 1) {
+            // Continue until null (i.e. end of token)
+            while (check_for(*heapPos) < 0) {
+                if (newToken == 0) {
+                    // Set command argument
+                    job->pipeline[numCommands].argv[numArgs] = heapPos;
+                    newToken = 1;
+                }
+                heapPos += 1;
+            }
+            // Set up for next token to be added
+            newToken = 0;
+            numArgs += 1;
+            heapPos += 1;
+            if (numArgs >= MAX_ARGS) {
+                return -2;
+            }
+        }
+        // Set arc of pipeline and set up for next command
+        job->pipeline[numCommands].argc = numArgs;
+        newToken = 0;
+        numCommands += 1;
+        heapPos += 1;
+        if (numCommands >= MAX_PIPELINE_LEN) {
+            return -3;
+        }
+    }
+    job->num_stages = numCommands;
+    return 0;
+}
+
+int process_job(struct Job* job) {
+    char *heapPos = heap_start();
+    int status;
+    
+    status = process_commands(job, heapPos);
+    if (status < 0) {
+        return status;
+    }
+
+    while (check_for(*heapPos) < 5) {
+        switch (check_for(*heapPos)) {
+            // No more | should occur after the first < > &
+            case 1:
+                return -4;
+                break;
+            // infile <
+            // each field should only have one token each maximum
+            case 2:
+                if (job->infile_path == '\0') {
+                    job->infile_path = heapPos + 1;
+                } else {
+                    return -4;
+                }
+                break;
+            // outfile >
+            case 3:
+                if (job->outfile_path == '\0') {
+                    job->outfile_path = heapPos + 1;
+                } else {
+                    return -4;
+                }
+                break;
+            // background &
+            case 4:
+                if (job->background == '\0') {
+                    job->background = 1;
+                } else {
+                    return -4;
+                }
+                break;
+            }
+        heapPos += 1;
+    }
+    return 0;
+}
+
+void write_cmd_prefix() {
+    int i = 0;
+    char* n;
+    while (cmdPath[i] != 0) {
+        n = alloc(1);
+        n[0] = cmdPath[i];
+        i += 1;
+    }
+    return;
+}
+
+int tokenize_line(char* buffer) {
+    int i = 0;
+    int newToken = 0;
+    int startOfCommand = 0;
+    char* n;
+    while (check_for(buffer[i]) < 5) {
+        // Non-whitespace, non-terminal characters written to heap normally
+        if ((check_for(buffer[i]) < 0)) {
+            // Mark the start of a new token if previous characters were special cases
+            if (newToken < 1) {
+                newToken = 1;
+                // If this is the first argument of a command, prepend "/src/usr/"
+                if (startOfCommand == 0) {
+                    write_cmd_prefix();
+                    startOfCommand = 1;
+                }
+            }
+            n = alloc(1);
+            n[0] = buffer[i];
+        }
+
+        // If a terminal character has been reached without any token having
+        // been recorded (e.g. ||), the command is malformed
+        else if (check_for(buffer[i]) > 0 && newToken == 0) {
+            return -4;
+        }
+
+        // Check if the symbol is the first special one after a full token
+        else if (check_for(buffer[i]) > -1 && newToken == 1) {
+            // null terminate the token
+            n = alloc(1);
+            n[0] = '\0';
+            newToken = 0;
+
+            // If the symbol is a | then the next token is the start of a new command
+            if (check_for(buffer[i]) == 1) {
+                startOfCommand = 0;
+            }
+
+            // If the symbol is terminal, add it to the heap for later processing
+            if (check_for(buffer[i]) > 0) {
+                n = alloc(1);
+                n[0] = buffer[i];
+            }
+        }
+        i += 1;
+    }
+    // add a newline to the heap so final processing knows when to stop 
+    n = alloc(1);
+    n[0] = '\n';
+    return 0;
+}
+
+int get_job(struct Job* job) {
 	char buffer[maxBuffer];
     int readLength;
+    int status;
 
     //prompt and read input
     write(1, prompt, 2);
@@ -418,43 +580,18 @@ int get_command(struct Command* command) {
     }
 
     // clear the heap
-    clear_heap();
+    free_all();
 
-    // when a non-whitespace character is reached after any number
-    // of whitespace characters, place a pointer to that character
-    // into command's argv.
-    int i = 0;
-    int newToken = 0;
-    int tokenCount = 0;
-    char tokenizedLine = alloc(512);
-
-	while (buffer[i] != '\n') {
-        if ((buffer[i] != ' ')) {
-            if (newToken == 0) {
-                command->argv[tokenCount] = tokenizedLine;
-                newToken = 1;
-                tokenCount += 1;
-            }
-            tokenizedLine = buffer[i];
-            tokenizedLine += 1;
-        }
-        if ((buffer[i] == ' ') && newToken == 1) {
-            newToken = 0;
-            tokenizedLine = NULL;
-            tokenizedLine += 1;
-        }
-        if (tokenCount >= MAX_ARGS - 1) {
-            return -2;
-        }
-        i += 1;
+    // tokenize the entire command line for simple parsing
+    status = tokenize_line(buffer);
+    if (status < 0) {
+        return status;
     }
 
-    // set argc of the command
-    command->argc = tokenCount;
-
-    //clear buffer
+    //clear buffer as everything is now in the heap
     for (int i = 0; i < readLength; i++) {
         buffer[i] = 0;
     }
-    return 0;
+
+    return process_job(job);
 }
