@@ -615,6 +615,9 @@ int get_job(struct Job* job) {
     // clear the heap
     free_all();
 
+	// clear the previous job
+    *job = clear;
+
     // tokenize the entire command line for simple parsing
     status = tokenize_line(buffer);
 
