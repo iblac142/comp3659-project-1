@@ -19,8 +19,6 @@ struct Job
   int background;			/* 0 for foreground, 1 for background */
 };
 
-const struct Job clear = {0};
-
 int run_job(struct Job* job);
 /*
 Runs given job with support for multi-stage pipelines, I/O redirection, and background jobs
