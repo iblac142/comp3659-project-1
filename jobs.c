@@ -450,7 +450,7 @@ int process_commands(struct Job* job) {
             return -3;
         }
         
-        if (check_for(heapStart[i]) < 3) {
+        if (check_for(heapStart[i]) < 2) {
             i += 1;
         }
     }
