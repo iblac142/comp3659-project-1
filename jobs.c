@@ -23,6 +23,7 @@ const char *pipeError = "Error while creating pipes\n";
 const char *cmdPath = "/usr/bin/";
 const char *cmdExit = "/usr/bin/exit";
 
+const struct Job clear = {0};
 
 /*
 Helper function to run a command with optional waiting
@@ -614,6 +615,9 @@ int get_job(struct Job* job) {
 
     // clear the heap
     free_all();
+
+	// clear the previous job
+    *job = clear;
 
     // tokenize the entire command line for simple parsing
     status = tokenize_line(buffer);
