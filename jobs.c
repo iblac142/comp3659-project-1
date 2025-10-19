@@ -59,7 +59,7 @@ static int run_command(struct Command* command, int infile, int outfile, int wai
             dup2(outfile, 1);
             close(outfile);
         }
-        execve(command->argv[0], command->argv, '\0');
+        execve(command->argv[0], command->argv, NULL);
         write(1, execveError, 39);
         _exit(2);
     }
@@ -97,7 +97,7 @@ static void run_command_no_fork(struct Command* command, int infile, int outfile
         dup2(outfile, 1);
         close(outfile);
     }
-    execve(command->argv[0], command->argv, '\0');
+    execve(command->argv[0], command->argv, NULL);
     write(1, execveError, 39);
     _exit(2);
 }
@@ -119,14 +119,14 @@ static int run_single_stage_job(struct Job* job) {
     int out = 0;
     int should_wait = 1;
     
-    if (job->infile_path != '\0') {
+    if (job->infile_path != NULL) {
         in = open(job->infile_path, O_RDONLY);
         if (in == -1) {
             write(1, inOpenError, 35);
             return -3;
         }
     }
-    if (job->outfile_path != '\0') {
+    if (job->outfile_path != NULL) {
         out = open(job->outfile_path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         if (out == -1) {
             write(1, outOpenError, 36);
@@ -201,7 +201,7 @@ static void setup_first_command(struct Job* job, int pipes[][2], int numberOfPip
     int in = 0;
     int out = 0;
     
-    if (job->infile_path != '\0') {
+    if (job->infile_path != NULL) {
         in = open(job->infile_path, O_RDONLY);
         if (in == -1) {
             write(1, inOpenError, 35);
@@ -237,7 +237,7 @@ static void setup_last_command(struct Job* job, int pipes[][2], int numberOfPipe
     int in = 0;
     int out = 0;
     
-    if (job->outfile_path != '\0') {
+    if (job->outfile_path != NULL) {
         out = open(job->outfile_path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         if (out == -1) {
             write(1, outOpenError, 36);

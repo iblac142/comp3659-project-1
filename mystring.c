@@ -22,12 +22,11 @@ int mystrcmp(const char *s1, const char *s2)
 }
 
 
-char *mystrcpy(char *dest, const char *src)
+void *mystrcpy(char *dest, const char *src)
 {
   int i = 0;
-    while (src[i] != '/0') {
+    while (src[i] != '\0') {
         dest[i] = src[i];
         i += 1;
     }
-    return;
 }
