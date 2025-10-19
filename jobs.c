@@ -617,14 +617,16 @@ int get_job(struct Job* job) {
 
     // tokenize the entire command line for simple parsing
     status = tokenize_line(buffer);
+
+	//clear buffer as everything is now in the heap
+    for (int i = 0; i < readLength; i++) {
+        buffer[i] = 0;
+    }
+	
     if (status < 0) {
         return status;
     }
     
-    //clear buffer as everything is now in the heap
-    for (int i = 0; i < readLength; i++) {
-        buffer[i] = 0;
-    }
 
     return process_job(job);
 }
