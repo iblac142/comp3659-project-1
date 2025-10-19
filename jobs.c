@@ -605,7 +605,7 @@ int get_job(struct Job* job) {
         while (read(0, &discard, 1) == 1 && discard != '\n') {
         }
         //clear buffer
-        for (int i = 0; i < readLength; i++) {
+        for (int i = 0; i < maxBuffer; i++) {
             buffer[i] = 0;
         }
         //return
@@ -619,7 +619,7 @@ int get_job(struct Job* job) {
     status = tokenize_line(buffer);
 
 	//clear buffer as everything is now in the heap
-    for (int i = 0; i < readLength; i++) {
+    for (int i = 0; i < maxBuffer; i++) {
         buffer[i] = 0;
     }
 	
