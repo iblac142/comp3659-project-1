@@ -23,6 +23,7 @@ const char *pipeError = "Error while creating pipes\n";
 const char *cmdPath = "/usr/bin/";
 const char *cmdExit = "/usr/bin/exit";
 
+const struct Job clear = {0};
 
 /*
 Helper function to run a command with optional waiting
