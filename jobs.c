@@ -407,57 +407,77 @@ int check_for(char n) {
     return -1;
 }
 
-int process_commands(struct Job* job, char* heapPos) {
+int process_commands(struct Job* job) {
+    char* heapStart = heap_start();
     int numArgs = 0;
-    int numCommands = 0;
+    unsigned int numCommands = 0;
     int newToken = 0;
+    int i = 0;
+    // Check for exit command
+    if (mystrcmp(heapStart, cmdExit) == 0) {
+        return -50;
+    }
     // Continue until first < or > or & or end of file
-    while (check_for(*heapPos) < 2) {
+    while (check_for(heapStart[i]) < 2) {
         // Continue until | (i.e. end of command)
-        while (check_for(*heapPos) < 1) {
+        while (check_for(heapStart[i]) < 1) {
             // Continue until null (i.e. end of token)
-            while (check_for(*heapPos) < 0) {
+            while (check_for(heapStart[i]) < 0) {
                 if (newToken == 0) {
-                    // Check for exit command
-                    if mystrcmp(heapPos, cmdExit) {
-                        return 1;
-                    }
                     // Set command argument
-                    job->pipeline[numCommands].argv[numArgs] = heapPos;
+                    job->pipeline[numCommands].argv[numArgs] = &heapStart[i];
                     newToken = 1;
                 }
-                heapPos += 1;
+                i += 1;
             }
             // Set up for next token to be added
             newToken = 0;
             numArgs += 1;
-            heapPos += 1;
+            
             if (numArgs >= MAX_ARGS) {
                 return -2;
             }
+            if (check_for(heapStart[i]) < 2) {
+                i += 1;
+            }
         }
-        // Set arc of pipeline and set up for next command
+        // Set argc of pipeline and set up for next command
         job->pipeline[numCommands].argc = numArgs;
         newToken = 0;
+        numArgs = 0;
         numCommands += 1;
-        heapPos += 1;
         if (numCommands >= MAX_PIPELINE_LEN) {
             return -3;
         }
+        
+        if (check_for(heapStart[i]) < 3) {
+            i += 1;
+        }
     }
     job->num_stages = numCommands;
-    return 0;
+    return i;
 }
 
 int process_job(struct Job* job) {
     char *heapPos = heap_start();
     int status;
-    
-    status = process_commands(job, heapPos);
-    if (status < 0) {
-        return status;
-    }
+    int setIn = 0;
+    int setOut = 0;
+    int setBack = 0;
 
+    // Set default values first
+    job->infile_path = NULL;
+    job->outfile_path = NULL;
+    job->background = 0;
+    
+    status = process_commands(job);
+    if (status == -50) {
+        return 1;
+    } else if (status < 0) {
+        return status;
+    } else {
+        heapPos += status;
+    }
     while (check_for(*heapPos) < 5) {
         switch (check_for(*heapPos)) {
             // No more | should occur after the first < > &
@@ -467,24 +487,27 @@ int process_job(struct Job* job) {
             // infile <
             // each field should only have one token each maximum
             case 2:
-                if (job->infile_path == NULL) {
+                if (setIn == 0) {
                     job->infile_path = heapPos + 1;
+                    setIn = 1;
                 } else {
                     return -4;
                 }
                 break;
             // outfile >
             case 3:
-                if (job->outfile_path == NULL) {
+                if (setOut == 0) {
                     job->outfile_path = heapPos + 1;
+                    setOut = 1;
                 } else {
                     return -4;
                 }
                 break;
             // background &
             case 4:
-                if (job->background == NULL) {
+                if (setBack == 0) {
                     job->background = 1;
+                    setBack = 1;
                 } else {
                     return -4;
                 }
@@ -493,17 +516,6 @@ int process_job(struct Job* job) {
         heapPos += 1;
     }
     return 0;
-}
-
-void write_cmd_prefix() {
-    int i = 0;
-    char* n;
-    while (cmdPath[i] != 0) {
-        n = alloc(1);
-        n[0] = cmdPath[i];
-        i += 1;
-    }
-    return;
 }
 
 int tokenize_line(char* buffer) {
@@ -527,32 +539,46 @@ int tokenize_line(char* buffer) {
             n = alloc(1);
             n[0] = buffer[i];
         }
-
-        // If a terminal character has been reached without any token having
-        // been recorded (e.g. ||), the command is malformed
-        else if (check_for(buffer[i]) > 0 && newToken == 0) {
-            return -4;
-        }
-
-        // Check if the symbol is the first special one after a full token
-        else if (check_for(buffer[i]) > -1 && newToken == 1) {
-            // null terminate the token
-            n = alloc(1);
-            n[0] = '\0';
-            newToken = 0;
-
-            // If the symbol is a | then the next token is the start of a new command
-            if (check_for(buffer[i]) == 1) {
-                startOfCommand = 0;
-            }
-
-            // If the symbol is terminal, add it to the heap for later processing
-            if (check_for(buffer[i]) > 0) {
+        else if (check_for(buffer[i]) > -1) {
+            if (newToken == 1) {
+                // null terminate the token
                 n = alloc(1);
-                n[0] = buffer[i];
+                n[0] = '\0';
+                newToken = 0;
+            }
+            
+            if (check_for(buffer[i]) > 0) {
+                // If a terminal character has been reached without any token having
+                 // been recorded (e.g. ||), the command is malformed
+                if (startOfCommand == 0) {
+                    return -4;
+                } else {
+                    // If the symbol is | then this is a new command
+                    if (check_for(buffer[i]) == 1) {
+                        startOfCommand = 0;
+                    }
+                    // If the symbol is terminal, add it to the heap for later processing
+                    if (check_for(buffer[i]) > 0) {
+                        n = alloc(1);
+                        n[0] = buffer[i];
+                    }
+                }
             }
         }
         i += 1;
+    }
+
+    // if there is not a final token and the command doesn't
+    // end with &, the command is malformed
+    if (newToken == 1) {
+        // null terminate the final token if present
+        n = alloc(1);
+        n[0] = '\0';
+        newToken = 0;
+    } else {
+        if (check_for(n[0]) != 4) {
+            return -4;
+        }
     }
     // add a newline to the heap so final processing knows when to stop 
     n = alloc(1);
@@ -594,7 +620,7 @@ int get_job(struct Job* job) {
     if (status < 0) {
         return status;
     }
-
+    
     //clear buffer as everything is now in the heap
     for (int i = 0; i < readLength; i++) {
         buffer[i] = 0;

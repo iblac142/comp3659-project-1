@@ -57,19 +57,17 @@ Returns:
   -1 if the symbol is anything else 
 */
 
-int process_commands(struct Job* job, char* heapPos);
+int process_commands(struct Job* job);
 /* Populates the commands of the supplied job structure until one of < > & or \n are encountered
 
 job - the job structure to be populated
 
-heapPos - should point to the beginning of the heap, and is 
-left pointing to the first < > & or \n in the heap afterward
-
 Returns:
-  1 if an exit command is detected
-  0 if run successful
+  a positive value if run successful, equal to the position of the terminal symbol required
+    relative to the start of the heap
   -2 if a command has too many arguments
   -3 if the pipeline has too many commands in it
+  -50 if an exit command is detected
 */
 
 int process_job(struct Job* job);
@@ -80,18 +78,11 @@ then populates any other relevant fields itself.
 job - the job structure to be populated
 
 Returns:
+  1 if an exit command is detected
   0 if run successful
   -2 if a command has too many arguments 
   -3 if the pipeline has too many commands in it 
   -4 if a malformed command is detected
-*/
-
-
-void write_cmd_prefix();
-/* Writes the command path prefix in cmdPath to the heap.
-
-  No arguments
-  No return values
 */
 
 

@@ -9,7 +9,7 @@ static char *freep = heap;
 char *alloc(unsigned int size)
 {
   freep += size;
-  return freep -= size;
+  return freep - size;
 }
 
 
