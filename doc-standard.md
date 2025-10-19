@@ -7,3 +7,7 @@ Inline comments are to be used when:
 * The precise function or purpose of a piece of code is not immediately apparent
 * It is helpful in letting a human reader understand the current state of the program
 * The coder believes it to be otherwise helpful
+
+Predefined constants are to be in UPPER_SNAKE_CASE.
+Function names and struct members are to be in snake_case.
+Variable names are to be in camelCase.
