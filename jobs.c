@@ -1,5 +1,6 @@
 #include "jobs.h"
 #include "myheap.h"
+#include "mystring.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -20,6 +21,7 @@ const char *outOpenError = "Error while opening file for output\n";
 const char *pipeError = "Error while creating pipes\n";
 
 const char *cmdPath = "/usr/bin/";
+const char *cmdExit = "/usr/bin/exit";
 
 
 /*
@@ -416,6 +418,10 @@ int process_commands(struct Job* job, char* heapPos) {
             // Continue until null (i.e. end of token)
             while (check_for(*heapPos) < 0) {
                 if (newToken == 0) {
+                    // Check for exit command
+                    if mystrcmp(heapPos, cmdExit) {
+                        return 1;
+                    }
                     // Set command argument
                     job->pipeline[numCommands].argv[numArgs] = heapPos;
                     newToken = 1;
@@ -461,7 +467,7 @@ int process_job(struct Job* job) {
             // infile <
             // each field should only have one token each maximum
             case 2:
-                if (job->infile_path == '\0') {
+                if (job->infile_path == NULL) {
                     job->infile_path = heapPos + 1;
                 } else {
                     return -4;
@@ -469,7 +475,7 @@ int process_job(struct Job* job) {
                 break;
             // outfile >
             case 3:
-                if (job->outfile_path == '\0') {
+                if (job->outfile_path == NULL) {
                     job->outfile_path = heapPos + 1;
                 } else {
                     return -4;
@@ -477,7 +483,7 @@ int process_job(struct Job* job) {
                 break;
             // background &
             case 4:
-                if (job->background == '\0') {
+                if (job->background == NULL) {
                     job->background = 1;
                 } else {
                     return -4;
@@ -513,7 +519,8 @@ int tokenize_line(char* buffer) {
                 newToken = 1;
                 // If this is the first argument of a command, prepend "/src/usr/"
                 if (startOfCommand == 0) {
-                    write_cmd_prefix();
+                    n = alloc(9);
+                    mystrcpy(n, cmdPath);
                     startOfCommand = 1;
                 }
             }
