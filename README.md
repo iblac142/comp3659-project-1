@@ -23,5 +23,6 @@ Requirements:
 
 Allowances:
 * Any amount of whitespace greater than a single character is ignored
+* Whitespace is not required around | < > & (e.g. `ls>out.txt` is acceptable)
 * < > & may be listed in any order
 * additional tokens after < > are ignored (e.g. `ls > file location name &` runs as `ls > file &`)
