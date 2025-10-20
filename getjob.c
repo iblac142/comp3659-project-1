@@ -1,9 +1,11 @@
-#include "jobs.h"
+#include "getjob.h"
 #include "myheap.h"
 #include "mystring.h"
 #include <unistd.h>
 
-
+const int maxBuffer = 256;
+const char *prompt = "$ ";
+const char *lengthError = "Message exceeds max length of 256, please re-enter command with shorter length\n";
 const char *argCountError = "Error while processing command: a command has too many arguments\n";
 const char *pipeCountError = "Error while processing command: too many commands in pipeline\n";
 const char *malCommandError = "Error while processing command: malformed input\n";
@@ -11,7 +13,22 @@ const char *malCommandError = "Error while processing command: malformed input\n
 const char *cmdPath = "/usr/bin/";
 const char *cmdExit = "/usr/bin/exit";
 
-int check_for(char n) {
+const struct Job clear = {0};
+
+/* Checks if a given symbol is whitespace, null, or a terminal symbol
+
+n - the symbol to be checked
+
+Returns:
+    0 if the symbol is space, tab, or null (' ', '\t', '\0')
+    1 if the symbol is |
+    2 if the symbol is <
+    3 if the symbol is >
+    4 if the symbol is &
+    5 if the symbol is new line ('\n')
+    -1 if the symbol is anything else 
+*/
+static int check_for(char n) {
     if (n == ' ' || n == '\t' || n == '\0') return 0;
     if (n == '|') return 1;
     if (n == '<') return 2;
@@ -21,7 +38,18 @@ int check_for(char n) {
     return -1;
 }
 
-int process_commands(struct Job* job) {
+/* Populates the commands of the supplied job structure until one of < > & or \n are encountered
+
+job - the job structure to be populated
+
+Returns:
+    a positive value if run successful, equal to the position of the terminal symbol required
+        relative to the start of the heap
+    -2 if a command has too many arguments
+    -3 if the pipeline has too many commands in it
+    -50 if an exit command is detected
+*/
+static int process_commands(struct Job* job) {
     char* heapStart = heap_start();
     int numArgs = 0;
     unsigned int numCommands = 0;
@@ -74,7 +102,20 @@ int process_commands(struct Job* job) {
     return i;
 }
 
-int process_job(struct Job* job) {
+/* Populates the supplied job structure by reading from the heap.
+First, populates the command structures via process_commands,
+then populates any other relevant fields itself.
+
+job - the job structure to be populated
+
+Returns:
+    1 if an exit command is detected
+    0 if run successful
+    -2 if a command has too many arguments 
+    -3 if the pipeline has too many commands in it 
+    -4 if a malformed command is detected
+*/
+static int process_job(struct Job* job) {
     char *heapPos = heap_start();
     int status;
     int setIn = 0;
@@ -138,7 +179,18 @@ int process_job(struct Job* job) {
     return 0;
 }
 
-int tokenize_line(char* buffer) {
+/* Tokenizes the contents of the supplied buffer onto the heap,
+removing excess whitespace, adding command path prefixes,
+and null terminating each token
+
+buffer - the beginning of the buffer to be tokenized
+
+Returns:
+    0 if run successful
+    -4 if a malformed command is detected
+
+*/
+static int tokenize_line(char* buffer) {
     int i = 0;
     int newToken = 0;
     int startOfCommand = 0;
@@ -206,4 +258,53 @@ int tokenize_line(char* buffer) {
     n = alloc(1);
     n[0] = '\n';
     return 0;
+}
+
+
+int get_job(struct Job* job) {
+	char buffer[maxBuffer];
+    int readLength;
+    int status;
+
+    //prompt and read input
+    write(1, prompt, 2);
+    readLength = read(0, buffer, maxBuffer);
+    
+    //check length
+    while (readLength >= maxBuffer) {
+        //display error message and reprompt
+        write(1, lengthError, 80);
+        write(1, prompt, 2);
+        //discard rest of input not read by first read
+        char discard;
+        while (read(0, &discard, 1) == 1 && discard != '\n') {
+        }
+        //clear buffer
+        for (int i = 0; i < maxBuffer; i++) {
+            buffer[i] = 0;
+        }
+        //return
+        return -1;
+    }
+
+    // clear the heap
+    free_all();
+
+	// clear the previous job
+    *job = clear;
+
+    // tokenize the entire command line for simple parsing
+    status = tokenize_line(buffer);
+
+	//clear buffer as everything is now in the heap
+    for (int i = 0; i < maxBuffer; i++) {
+        buffer[i] = 0;
+    }
+
+    if (status < 0) {
+        return status;
+    }
+    
+
+    return process_job(job);
 }

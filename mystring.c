@@ -1,12 +1,5 @@
 #include "mystring.h"
 
-/* NOT USED
-unsigned int mystrlen(const char *s)
-{
-  return strlen(s);      
-}
-*/
-
 int mystrcmp(const char *s1, const char *s2)
 {
   while (*s1 != '\0' && (*s1 == *s2)) {

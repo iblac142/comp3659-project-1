@@ -1,8 +1,6 @@
-#include "mystring.h"
 #include "jobs.h"
-#include "myheap.h"
-#include <unistd.h>
-#include <string.h>
+#include "getjob.h"
+#include "runjob.h"
 
 int main(int argc, char const *argv[]) {
     int exitRequested = 0;
