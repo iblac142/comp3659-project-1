@@ -255,7 +255,7 @@ static int tokenize_line(char* buffer) {
         n[0] = '\0';
         newToken = 0;
     } else {
-        if (check_for(n[0]) != 4) {
+        if (check_for(n[0]) != 0 && check_for(n[0]) != 4) {
 			write(1, malCommandError, 48);
             return -4;
         }
@@ -315,5 +315,6 @@ int get_job(struct Job* job) {
     return process_job(job);
 
 }
+
 
 
