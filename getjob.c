@@ -77,7 +77,7 @@ static int process_commands(struct Job* job) {
             numArgs += 1;
 
 			// Detect too many arguments
-            if (numArgs >= MAX_ARGS) {
+            if (numArgs > MAX_ARGS) {
 				write(1, argCountError, 65);
                 return -2;
             }
@@ -94,7 +94,7 @@ static int process_commands(struct Job* job) {
         numCommands += 1;
 
 		// Detect too many commands
-        if (numCommands >= MAX_PIPELINE_LEN) {
+        if (numCommands > MAX_PIPELINE_LEN) {
 			write(1, pipeCountError, 62);
             return -3;
         }
@@ -315,4 +315,5 @@ int get_job(struct Job* job) {
     return process_job(job);
 
 }
+
 
