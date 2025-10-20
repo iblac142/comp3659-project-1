@@ -19,6 +19,9 @@ int main(int argc, char const *argv[]) {
         if (status == 0) {
             run_job(&currentJob);
         }
+        
+        check_for_zombies();
+
         status = get_job(&currentJob);
         if (status == 1) {
             exitRequested = 1;

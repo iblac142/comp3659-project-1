@@ -41,6 +41,12 @@ Return:
 
 */
 
+/*
+Checks for any zombie children of current proccess and cleans them up, will loop untill
+there are no more zombies
+
+No arguments or return values
+*/
 void check_for_zombies();
 
 int check_for(char n);

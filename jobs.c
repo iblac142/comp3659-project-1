@@ -406,7 +406,7 @@ int run_job(struct Job* job) {
 void check_for_zombies() {
     int status;
 
-    waitpid(-1, &status, WNOHANG);
+    while (waitpid(-1, &status, WNOHANG) > 0) {} 
 }
 
 int check_for(char n) {
