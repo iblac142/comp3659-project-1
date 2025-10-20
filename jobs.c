@@ -12,13 +12,18 @@
 
 const int maxBuffer = 256;
 const char *prompt = "$ ";
-const char *lengthError = "Message exceeds max length of 256, please re-enter command with shorter length\n";
+
 const char *forkError = "Error occurred while forking new process\n";
 const char *execveError = "Error occurred while executing program\n";
 const char *waitpidError = "Error occurred while waiting for program\n"; 
 const char *inOpenError = "Error while opening file for input\n";
 const char *outOpenError = "Error while opening file for output\n";
 const char *pipeError = "Error while creating pipes\n";
+
+const char *lengthError = "Message exceeds max length of 256, please re-enter command with shorter length\n";
+const char *argCountError = "Error while processing command: a command has too many arguments\n";
+const char *pipeCountError = "Error while processing command: too many commands in pipeline\n";
+const char *malCommandError = "Error while processing command: malformed input\n";
 
 const char *cmdPath = "/usr/bin/";
 const char *cmdExit = "/usr/bin/exit";
@@ -442,6 +447,7 @@ int process_commands(struct Job* job) {
             numArgs += 1;
             
             if (numArgs >= MAX_ARGS) {
+				write(1, argCountError, 65);
                 return -2;
             }
             if (check_for(heapStart[i]) < 2) {
@@ -454,6 +460,7 @@ int process_commands(struct Job* job) {
         numArgs = 0;
         numCommands += 1;
         if (numCommands >= MAX_PIPELINE_LEN) {
+			write(1, pipeCountError, 62);
             return -3;
         }
         
@@ -489,6 +496,7 @@ int process_job(struct Job* job) {
         switch (check_for(*heapPos)) {
             // No more | should occur after the first < > &
             case 1:
+				write(1, malCommandError, 48);
                 return -4;
                 break;
             // infile <
@@ -498,6 +506,7 @@ int process_job(struct Job* job) {
                     job->infile_path = heapPos + 1;
                     setIn = 1;
                 } else {
+					write(1, malCommandError, 48);
                     return -4;
                 }
                 break;
@@ -507,6 +516,7 @@ int process_job(struct Job* job) {
                     job->outfile_path = heapPos + 1;
                     setOut = 1;
                 } else {
+					write(1, malCommandError, 48);
                     return -4;
                 }
                 break;
@@ -516,6 +526,7 @@ int process_job(struct Job* job) {
                     job->background = 1;
                     setBack = 1;
                 } else {
+					write(1, malCommandError, 48);
                     return -4;
                 }
                 break;
@@ -558,6 +569,7 @@ int tokenize_line(char* buffer) {
                 // If a terminal character has been reached without any token having
                  // been recorded (e.g. ||), the command is malformed
                 if (startOfCommand == 0) {
+					write(1, malCommandError, 48);
                     return -4;
                 } else {
                     // If the symbol is | then this is a new command
@@ -584,6 +596,7 @@ int tokenize_line(char* buffer) {
         newToken = 0;
     } else {
         if (check_for(n[0]) != 4) {
+			write(1, malCommandError, 48);
             return -4;
         }
     }
@@ -632,7 +645,7 @@ int get_job(struct Job* job) {
     for (int i = 0; i < maxBuffer; i++) {
         buffer[i] = 0;
     }
-	
+
     if (status < 0) {
         return status;
     }
