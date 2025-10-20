@@ -398,6 +398,12 @@ int run_job(struct Job* job) {
     return 0;
 }
 
+void check_for_zombies() {
+    int status;
+
+    waitpid(-1, &status, WNOHANG);
+}
+
 int check_for(char n) {
     if (n == ' ' || n == '\t' || n == '\0') return 0;
     if (n == '|') return 1;

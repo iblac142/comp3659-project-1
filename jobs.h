@@ -41,6 +41,8 @@ Return:
 
 */
 
+void check_for_zombies();
+
 int check_for(char n);
 /* Checks if a given symbol is whitespace, null, or a terminal symbol
 
