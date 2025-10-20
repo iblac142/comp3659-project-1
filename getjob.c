@@ -75,11 +75,14 @@ static int process_commands(struct Job* job) {
             // Set up for next token to be added
             newToken = 0;
             numArgs += 1;
-            
+
+			// Detect too many arguments
             if (numArgs >= MAX_ARGS) {
 				write(1, argCountError, 65);
                 return -2;
             }
+			
+			// Move i forward if it's not < > & \n
             if (check_for(heapStart[i]) < 2) {
                 i += 1;
             }
@@ -89,11 +92,14 @@ static int process_commands(struct Job* job) {
         newToken = 0;
         numArgs = 0;
         numCommands += 1;
+
+		// Detect too many commands
         if (numCommands >= MAX_PIPELINE_LEN) {
 			write(1, pipeCountError, 62);
             return -3;
         }
-        
+
+		// Move i forward if it's not < > & \n
         if (check_for(heapStart[i]) < 2) {
             i += 1;
         }
@@ -309,3 +315,4 @@ int get_job(struct Job* job) {
     return process_job(job);
 
 }
+
