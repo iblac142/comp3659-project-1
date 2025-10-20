@@ -1,12 +1,11 @@
 #include "mystring.h"
-#include <string.h>       /* TO DO: initial cheat! Remove this line and all library dependency evetually */
 
-
+/* NOT USED
 unsigned int mystrlen(const char *s)
 {
-  return strlen(s);     /* TO DO: replace string library wrappers with non-library code */
+  return strlen(s);      
 }
-
+*/
 
 int mystrcmp(const char *s1, const char *s2)
 {

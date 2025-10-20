@@ -1,5 +1,5 @@
 mysh: mysh.o mystring.o myheap.o jobs.o
-	gcc mysh.o mystring.o myheap.o jobs.o -o mysh
+	gcc mysh.o mystring.o myheap.o jobs.o get.o -o mysh
 
 test: test.o mystring.o myheap.o jobs.o
 	gcc test.o mystring.o myheap.o jobs.o -o test
@@ -18,6 +18,9 @@ myheap.o: myheap.c myheap.h
 
 jobs.o: jobs.c jobs.h myheap.h
 	gcc -c jobs.c
+
+get.o: get.c get.h
+	gcc -c get.c
 
 clean:
 	/usr/bin/rm -f *.o mysh
