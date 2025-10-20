@@ -22,7 +22,8 @@ Requirements:
 * the pipeline must not exceed 64 commands, excluding the infile and outfile
 
 Allowances:
-* Any amount of whitespace greater than a single character is ignored
+* Any amount of whitespace greater than a single character is collapsed into one
 * Whitespace is not required around | < > & (e.g. `ls>out.txt` is acceptable)
+* Trailing whitespace is acceptable
 * < > & may be listed in any order
 * additional tokens after < > are ignored (e.g. `ls > file location name &` runs as `ls > file &`)
