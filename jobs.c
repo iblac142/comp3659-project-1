@@ -335,16 +335,10 @@ static int execute_pipeline(struct Job* job, int pipes[][2], int numberOfPipes, 
             }
             return -1;
         }
-
-        else {
-            // in parent (shell)
-            if (i > 0) {
-                // close pipe with both ends already in use by a child
-                close(pipes[i - 1][PIPE_READ_END]);
-                close(pipes[i - 1][PIPE_WRITE_END]);
-            }
-        }
     }
+
+    close_all_pipes(numberOfPipes, pipes);
+    
     return 0;
 }
 
