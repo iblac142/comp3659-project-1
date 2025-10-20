@@ -10,8 +10,8 @@ int main(int argc, char const *argv[]) {
     struct Job currentJob;
 
 
-
-    if (get_job(&currentJob) == 1) {
+    status = get_job(&currentJob);
+    if (status == 1) {
         exitRequested = 1;
     }
 
