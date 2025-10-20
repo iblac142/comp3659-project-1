@@ -43,8 +43,8 @@ static int check_for(char n) {
 job - the job structure to be populated
 
 Returns:
-    a positive value if run successful, equal to the position of the terminal symbol required
-        relative to the start of the heap
+    a positive value if run successful, equal to the position of the first 
+        terminal symbol encountered, relative to the start of the heap
     -2 if a command has too many arguments
     -3 if the pipeline has too many commands in it
     -50 if an exit command is detected
@@ -307,4 +307,5 @@ int get_job(struct Job* job) {
     
 
     return process_job(job);
+
 }
