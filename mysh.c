@@ -6,6 +6,7 @@
 
 int main(int argc, char const *argv[]) {
     int exitRequested = 0;
+    int status = 0;
     struct Job currentJob;
 
 
@@ -15,9 +16,11 @@ int main(int argc, char const *argv[]) {
     }
 
     while (!exitRequested) {
-        run_job(&currentJob);
-
-        if (get_job(&currentJob) == 1) {
+        if (status == 0) {
+            run_job(&currentJob);
+        }
+        status = get_job(&currentJob);
+        if (status == 1) {
             exitRequested = 1;
         }
     }
